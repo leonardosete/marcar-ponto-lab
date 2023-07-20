@@ -5,11 +5,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 headers = {
-  'X-Api-Key': os.environ['CLOCKIFY_API_KEY'],
+  # TODO: You gotta be kidding me, find a way to generate this token, stupid
+  'Authorization': f"Bearer {os.environ['LAB2DEV_API_TOKEN']}",
   'Content-Type': 'application/json'
 }
 
-base_url = 'https://api.clockify.me/api'
+base_url = 'https://portal-api.lab2dev.com'
 
 def get(endpoint):
   url = f'{base_url}/{endpoint}'
