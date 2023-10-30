@@ -23,15 +23,20 @@ while next_date.month == today.month:
   if current_date.weekday() in [5, 6]:
     continue
 
-  formatted_date = current_date.strftime("%Y-%m-%dT03:00:00.%fZ")
+  formatted_date = current_date.strftime("%Y-%m-%dT03:00:00.000Z")
+
+  start_date = current_date.strftime("%Y-%m-%dT09:00:00.000Z")
+  end_date = current_date.strftime("%Y-%m-%dT17:00:00.000Z")
 
   appointment = {
-    "billable": True,
     "date": formatted_date,
+    "start": start_date,
+    "end": end_date,
+
+    "billable": True,
     "extra": False,
-    "timeSpent": 480,
     "title": default_description,
-    "projectId": sre_project['id'],
+    "project": sre_project['id'],
   }
 
   appointment_response = lab2dev_api.post('appointments', appointment)
