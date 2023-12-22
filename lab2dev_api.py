@@ -2,32 +2,37 @@ import os
 import requests
 from dotenv import load_dotenv
 
+import browser_handler
+
 load_dotenv()
 
-headers = {
-  # TODO: You gotta be kidding me, find a way to generate this token, stupid
-  'Authorization': f"Bearer {os.environ['LAB2DEV_API_TOKEN']}",
-  'Content-Type': 'application/json'
-}
+class Lab2DevApi:
+  _base_url = 'https://portal-api.lab2dev.com'
 
-base_url = 'https://portal-api.lab2dev.com'
+  _headers = {
+    'Content-Type': 'application/json'
+  }
 
-def get(endpoint):
-  url = f'{base_url}/{endpoint}'
-  response = requests.get(url, headers=headers)
-  return response.json()
+  def __init__(self):
+    access_token, _ = browser_handler.get_authorization_token()
+    self._headers['Authorization'] = f'Bearer {access_token}'
 
-def post(endpoint, data):
-  url = f'{base_url}/{endpoint}'
-  response = requests.post(url, json=data, headers=headers)
-  return response.json()
+  def get(self, endpoint):
+    url = f'{self._base_url}/{endpoint}'
+    response = requests.get(url, headers=self._headers)
+    return response.json()
 
-def put(endpoint, data):
-  url = f'{base_url}/{endpoint}'
-  response = requests.put(url, json=data, headers=headers)
-  return response.json()
+  def post(self, endpoint, data):
+    url = f'{self._base_url}/{endpoint}'
+    response = requests.post(url, json=data, headers=self._headers)
+    return response.json()
 
-def delete(endpoint):
-  url = f'{base_url}/{endpoint}'
-  response = requests.delete(url, headers=headers)
-  return response.json()
+  def put(self, endpoint, data):
+    url = f'{self._base_url}/{endpoint}'
+    response = requests.put(url, json=data, headers=self._headers)
+    return response.json()
+
+  def delete(self, endpoint):
+    url = f'{self._base_url}/{endpoint}'
+    response = requests.delete(url, headers=self._headers)
+    return response.json()

@@ -1,52 +1,70 @@
 from datetime import datetime, timedelta
 
 import utils
-import lab2dev_api
+from lab2dev_api import Lab2DevApi
 
-project_name = 'WHP TM - Alocação IT Engineer SRE'
-default_description = 'Whirlpool - Automated'
+def register_appointments():
+  lab2dev_api = Lab2DevApi()
 
-lab2dev_projects = lab2dev_api.get('tracker/projects')
+  project_name = 'WHP TM - Alocação IT Engineer SRE'
+  default_description = 'Whirlpool - Automated'
 
-sre_project = list(filter(
-  lambda project: (project['name'] == project_name), 
-  lab2dev_projects,
-))[0]
+  lab2dev_projects = lab2dev_api.get('tracker/projects')
 
-today = datetime.today()
-next_date = datetime(today.year, today.month, 1)
+  sre_project = list(filter(
+    lambda project: (project['name'] == project_name), 
+    lab2dev_projects,
+  ))[0]
 
-while next_date.month == today.month:
-  current_date = next_date
-  next_date += timedelta(days=1)
+  non_working_days = lab2dev_api.get('tracker/config/workdays')
 
-  if current_date.weekday() in [5, 6]:
-    continue
+  formatted_non_working_days = list([
+    day['date'][:10]
+    for day 
+    in non_working_days 
+    if day['type'] == 'NON_WORKING_DAY'
+  ])
 
-  formatted_date = current_date.strftime("%Y-%m-%dT03:00:00.000Z")
+  today = datetime.today()
+  next_date = datetime(today.year, today.month, 1)
 
-  start_date = current_date.strftime("%Y-%m-%dT09:00:00.000Z")
-  end_date = current_date.strftime("%Y-%m-%dT17:00:00.000Z")
+  while next_date.month == today.month:
+    current_date = next_date
+    next_date += timedelta(days=1)
 
-  appointment = {
-    "date": formatted_date,
-    "start": start_date,
-    "end": end_date,
+    if current_date.weekday() in [5, 6]:
+      continue
 
-    "billable": True,
-    "extra": False,
-    "title": default_description,
-    "project": sre_project['id'],
-  }
+    if current_date.strftime('%Y-%m-%d') in formatted_non_working_days:
+      print(f'ℹ️ skipping non-working day {current_date}')
+      continue
 
-  appointment_response = lab2dev_api.post('appointments', appointment)
+    formatted_date = current_date.strftime('%Y-%m-%dT03:00:00.000Z')
 
-  if "error" in appointment_response:
-    print(f"❌ day {current_date}")
-    
-    utils.print_json({
-      "request": appointment,
-      "response": appointment_response,
-    })
-  else:
-    print(f"✅ day {current_date}")
+    start_date = current_date.strftime('%Y-%m-%dT09:00:00.000Z')
+    end_date = current_date.strftime('%Y-%m-%dT17:00:00.000Z')
+
+    appointment = {
+      'date': formatted_date,
+      'start': start_date,
+      'end': end_date,
+
+      'billable': True,
+      'extra': False,
+      'title': default_description,
+      'project': sre_project['id'],
+    }
+
+    appointment_response = lab2dev_api.post('appointments', appointment)
+
+    if 'error' in appointment_response:
+      print(f'❌ day {current_date}')
+      
+      utils.print_json({
+        'request': appointment,
+        'response': appointment_response,
+      })
+    else:
+      print(f'✅ day {current_date}')
+
+register_appointments()
