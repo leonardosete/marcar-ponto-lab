@@ -35,8 +35,10 @@ def register_appointments():
     if current_date.weekday() in [5, 6]:
       continue
 
-    if current_date.strftime('%Y-%m-%d') in formatted_non_working_days:
-      print(f'ℹ️ skipping non-working day {current_date}')
+    short_format_current_date = current_date.strftime('%Y-%m-%d')
+
+    if short_format_current_date in formatted_non_working_days:
+      print(f'❕ day {current_date} skipping non-working day')
       continue
 
     formatted_date = current_date.strftime('%Y-%m-%dT03:00:00.000Z')
@@ -58,13 +60,13 @@ def register_appointments():
     appointment_response = lab2dev_api.post('appointments', appointment)
 
     if 'error' in appointment_response:
-      print(f'❌ day {current_date}')
+      print(f'❌ day {short_format_current_date}')
       
       utils.print_json({
         'request': appointment,
         'response': appointment_response,
       })
     else:
-      print(f'✅ day {current_date}')
+      print(f'✅ day {short_format_current_date}')
 
 register_appointments()
