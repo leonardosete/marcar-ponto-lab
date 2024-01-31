@@ -22,7 +22,17 @@ def get_authorization_token() -> tuple[str, str]:
     user_email = os.environ['LAB2DEV_USER_EMAIL']
     user_password = os.environ['LAB2DEV_USER_PASSWORD']
 
-    browser_driver = webdriver.Firefox()
+    browser_options = webdriver.ChromeOptions()
+    browser_options.add_argument("--headless=new")
+    browser_options.add_argument("--no-sandbox")
+    browser_options.add_argument("--disable-dev-shm-usage")
+    browser_options.add_experimental_option("detach", True)
+    browser_options.binary_location = "/usr/bin/chromium-browser"
+
+    browser_driver = webdriver.Chrome(
+      options=browser_options,
+    )
+
     browser_driver.get(portal_url)
 
     portal_email_input = browser_driver.find_element(
