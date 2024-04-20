@@ -9,14 +9,14 @@ def register_appointments():
   project_name = 'WHP TM - Alocação IT Engineer SRE'
   default_description = 'Whirlpool - Automated'
 
-  lab2dev_projects = lab2dev_api.get('tracker/projects')
+  lab2dev_projects = lab2dev_api.get('projects')
 
   sre_project = list(filter(
     lambda project: (project['name'] == project_name), 
-    lab2dev_projects,
+    lab2dev_projects['projects'],
   ))[0]
 
-  non_working_days = lab2dev_api.get('tracker/config/workdays')
+  non_working_days = lab2dev_api.get('tracker/workdays')
 
   formatted_non_working_days = list([
     day['date'][:10]

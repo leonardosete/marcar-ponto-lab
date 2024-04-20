@@ -1,6 +1,6 @@
 import os
-import json
 import requests
+import utils
 from dotenv import load_dotenv
 
 import browser_handler
@@ -14,6 +14,8 @@ class Lab2DevApi:
   def __init__(self):
     portal_otp = browser_handler.get_portal_otp()
 
+    print(f"OTP: {portal_otp}")
+
     response = requests.post(
       f'{self._base_url}/auth/verify-otp',
       json={
@@ -25,22 +27,32 @@ class Lab2DevApi:
     self._http_client = requests.Session()
     self._http_client.cookies.update(response.cookies)
 
+    utils.print_json(self.get("collaborators/whoami"))
+
   def get(self, endpoint):
     url = f'{self._base_url}/{endpoint}'
     response = self._http_client.get(url)
-    return response.json()
+
+    try: return response.json()
+    except: return {}
 
   def post(self, endpoint, data):
     url = f'{self._base_url}/{endpoint}'
     response = self._http_client.post(url, json=data)
-    return response.json()
+
+    try: return response.json()
+    except: return {}
 
   def put(self, endpoint, data):
     url = f'{self._base_url}/{endpoint}'
     response = self._http_client.put(url, json=data)
-    return response.json()
+
+    try: return response.json()
+    except: return {}
 
   def delete(self, endpoint):
     url = f'{self._base_url}/{endpoint}'
     response = self._http_client.delete(url)
-    return response.json()
+
+    try: return response.json()
+    except: return {}
