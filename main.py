@@ -73,8 +73,8 @@ def register_appointments():
     lab2dev_api = Lab2DevApi()
 
     project_name = 'WHP TM - SRE Sênior'
-    default_description = 'Atividades SRE/DevOps'
-
+    default_description = os.getenv('DESCRIPTION', 'Atividades SRE/DevOps')
+    
     lab2dev_projects = lab2dev_api.get('projects')
 
     sre_project = list(filter(
@@ -82,10 +82,10 @@ def register_appointments():
         lab2dev_projects['projects'],
     ))[0]
 
-    today = datetime.today()
+    date_str = os.getenv('DATE', '')
+    today = datetime.today() if not date_str else datetime.strptime(date_str, '%Y-%m-%d')
     short_format_today = today.strftime('%Y-%m-%d')
 
-    # Obtendo os horários da variável de ambiente (ou usando padrão)
     start_time = os.getenv('START_DATE', '09:00:00')
     end_time = os.getenv('END_DATE', '17:00:00')
 
@@ -106,9 +106,9 @@ def register_appointments():
     appointment_response = lab2dev_api.post('appointments', appointment)
 
     if 'error' in appointment_response:
-        print(f'❌ Erro ao registrar o ponto de hoje ({short_format_today})')
+        print(f'❌ Erro ao registrar o ponto para {short_format_today}')
     else:
-        print(f'✅ Ponto registrado para hoje ({short_format_today})')
+        print(f'✅ Ponto registrado para {short_format_today}')
 
 if __name__ == "__main__":
     register_appointments()
