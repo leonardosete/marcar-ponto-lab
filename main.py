@@ -83,7 +83,7 @@ def register_appointments():
     ))[0]
 
     date_str = os.getenv('DATE', '')
-    today = datetime.today() if not date_str else datetime.strptime(date_str, '%Y-%m-%d')
+    today = datetime.today() if not date_str else datetime.strptime(date_str, '%d/%m/%Y')
     short_format_today = today.strftime('%Y-%m-%d')
 
     start_time = os.getenv('START_DATE', '09:00:00')
