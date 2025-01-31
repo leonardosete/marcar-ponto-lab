@@ -39,7 +39,7 @@ class Lab2DevApi:
         try:
             return response.json()
         except:
-            return {}
+            return []
 
     def post(self, endpoint, data):
         url = f'{self._base_url}/{endpoint}'
@@ -79,7 +79,7 @@ def register_appointments():
 
     sre_project = list(filter(
         lambda project: (project['name'] == project_name), 
-        lab2dev_projects['projects'],
+        lab2dev_projects,
     ))[0]
 
     start_date_str = os.getenv('START_DATE', '')
@@ -105,22 +105,21 @@ def register_appointments():
     formatted_non_working_days = list([
         day['date'][:10]
         for day in non_working_days 
-        if day['type'] == 'NON_WORKING_DAY'
+        if isinstance(day, dict) and day.get('type') == 'NON_WORKING_DAY'
     ])
 
     existing_appointments = lab2dev_api.get('appointments')
-    existing_dates = {appt['date'][:10]: appt['id'] for appt in existing_appointments.get('appointments', [])}
+    existing_dates = {appt['date'][:10]: appt['id'] for appt in existing_appointments if isinstance(appt, dict) and 'date' in appt and 'id' in appt}
 
     current_date = start_date
     while current_date <= end_date:
-        # Ignorar finais de semana
-        if current_date.weekday() in [5, 6]:  # 5 = Sábado, 6 = Domingo
+        short_format_date = current_date.strftime('%Y-%m-%d')
+
+        if current_date.weekday() in [5, 6]:
             print(f'❌ {current_date.strftime("%d/%m/%Y")} é fim de semana. Pulando.')
             current_date += timedelta(days=1)
             continue
 
-        # Ignorar feriados
-        short_format_date = current_date.strftime('%Y-%m-%d')
         if short_format_date in formatted_non_working_days:
             print(f'❌ {current_date.strftime("%d/%m/%Y")} é feriado. Pulando.')
             current_date += timedelta(days=1)
