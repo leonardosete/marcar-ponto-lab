@@ -14,7 +14,7 @@ class Lab2DevApi:
         response = self.__get_cookie_response_from_user_and_password()
         self._http_client = requests.Session()
         self._http_client.cookies.update(response.cookies)
-        utils.print_json(self.get("collaborators/whoami"))
+        #utils.print_json(self.get("collaborators/whoami"))
 
     def __get_cookie_response_from_user_and_password(self):
         response = requests.post(
