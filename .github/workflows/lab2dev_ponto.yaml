@@ -1,9 +1,18 @@
 name: Run Lab2Dev Automation
 
 on:
-  schedule:
-    - cron: '0 6 * * *'  # Executa diariamente às 06:00 UTC
-  workflow_dispatch:  # Permite execução manual
+#  schedule:
+#    - cron: '0 6 * * *'  # Executa diariamente às 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      START_DATE:
+        description: 'Horário de início do expediente (Formato: HH:MM:SS)'
+        required: false
+        default: '09:00:00'
+      END_DATE:
+        description: 'Horário de fim do expediente (Formato: HH:MM:SS)'
+        required: false
+        default: '17:00:00'
 
 jobs:
   run-lab2dev:
@@ -27,4 +36,6 @@ jobs:
         env:
           LAB2DEV_USER_EMAIL: ${{ secrets.LAB2DEV_USER_EMAIL }}
           LAB2DEV_USER_PASSWORD: ${{ secrets.LAB2DEV_USER_PASSWORD }}
+          START_DATE: ${{ github.event.inputs.START_DATE || '09:00:00' }}
+          END_DATE: ${{ github.event.inputs.END_DATE || '17:00:00' }}
         run: python main.py

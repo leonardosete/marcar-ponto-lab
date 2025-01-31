@@ -12,10 +12,8 @@ class Lab2DevApi:
 
     def __init__(self):
         response = self.__get_cookie_response_from_user_and_password()
-
         self._http_client = requests.Session()
         self._http_client.cookies.update(response.cookies)
-
         utils.print_json(self.get("collaborators/whoami"))
 
     def __get_cookie_response_from_user_and_password(self):
@@ -86,9 +84,14 @@ def register_appointments():
 
     today = datetime.today()
     short_format_today = today.strftime('%Y-%m-%d')
+
+    # Obtendo os horários da variável de ambiente (ou usando padrão)
+    start_time = os.getenv('START_DATE', '09:00:00')
+    end_time = os.getenv('END_DATE', '17:00:00')
+
     formatted_date = today.strftime('%Y-%m-%dT03:00:00.000Z')
-    start_date = today.strftime('%Y-%m-%dT09:00:00.000Z')
-    end_date = today.strftime('%Y-%m-%dT17:00:00.000Z')
+    start_date = f"{today.strftime('%Y-%m-%d')}T{start_time}.000Z"
+    end_date = f"{today.strftime('%Y-%m-%d')}T{end_time}.000Z"
 
     appointment = {
         'date': formatted_date,
@@ -107,4 +110,5 @@ def register_appointments():
     else:
         print(f'✅ Ponto registrado para hoje ({short_format_today})')
 
-register_appointments()
+if __name__ == "__main__":
+    register_appointments()
