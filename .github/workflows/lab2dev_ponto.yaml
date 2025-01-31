@@ -5,15 +5,19 @@ on:
 #    - cron: '0 6 * * *'  # Executa diariamente às 06:00 UTC
   workflow_dispatch:
     inputs:
-      DATE:
-        description: 'Data do apontamento (Formato: DD/MM/YYYY)'
+      START_DATE:
+        description: 'Data de início do apontamento (Formato: DD/MM/YYYY)'
         required: false
         default: ''
-      START_DATE:
+      END_DATE:
+        description: 'Data de fim do apontamento (Formato: DD/MM/YYYY)'
+        required: false
+        default: ''
+      WORK_START_TIME:
         description: 'Horário de início do expediente (Formato: HH:MM:SS)'
         required: false
         default: '09:00:00'
-      END_DATE:
+      WORK_END_TIME:
         description: 'Horário de fim do expediente (Formato: HH:MM:SS)'
         required: false
         default: '17:00:00'
@@ -44,8 +48,9 @@ jobs:
         env:
           LAB2DEV_USER_EMAIL: ${{ secrets.LAB2DEV_USER_EMAIL }}
           LAB2DEV_USER_PASSWORD: ${{ secrets.LAB2DEV_USER_PASSWORD }}
-          DATE: ${{ github.event.inputs.DATE || '' }}
-          START_DATE: ${{ github.event.inputs.START_DATE || '09:00:00' }}
-          END_DATE: ${{ github.event.inputs.END_DATE || '17:00:00' }}
+          START_DATE: ${{ github.event.inputs.START_DATE || '' }}
+          END_DATE: ${{ github.event.inputs.END_DATE || '' }}
+          WORK_START_TIME: ${{ github.event.inputs.WORK_START_TIME || '09:00:00' }}
+          WORK_END_TIME: ${{ github.event.inputs.WORK_END_TIME || '17:00:00' }}
           DESCRIPTION: ${{ github.event.inputs.DESCRIPTION || 'Atividades SRE/DevOps' }}
         run: python main.py

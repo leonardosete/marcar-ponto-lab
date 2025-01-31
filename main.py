@@ -1,7 +1,7 @@
 import os
 import requests
 import utils
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -82,33 +82,47 @@ def register_appointments():
         lab2dev_projects['projects'],
     ))[0]
 
-    date_str = os.getenv('DATE', '')
-    today = datetime.today() if not date_str else datetime.strptime(date_str, '%d/%m/%Y')
-    short_format_today = today.strftime('%Y-%m-%d')
+    start_date_str = os.getenv('START_DATE', '')
+    end_date_str = os.getenv('END_DATE', '')
 
-    start_time = os.getenv('START_DATE', '09:00:00')
-    end_time = os.getenv('END_DATE', '17:00:00')
+    if not start_date_str or not end_date_str:
+        print("❌ Datas de início e fim são obrigatórias.")
+        return
 
-    formatted_date = today.strftime('%Y-%m-%dT03:00:00.000Z')
-    start_date = f"{today.strftime('%Y-%m-%d')}T{start_time}.000Z"
-    end_date = f"{today.strftime('%Y-%m-%d')}T{end_time}.000Z"
+    start_date = datetime.strptime(start_date_str, '%d/%m/%Y')
+    end_date = datetime.strptime(end_date_str, '%d/%m/%Y')
 
-    appointment = {
-        'date': formatted_date,
-        'start': start_date,
-        'end': end_date,
-        'billable': True,
-        'extra': False,
-        'title': default_description,
-        'project': sre_project['id'],
-    }
+    if start_date > end_date:
+        print("❌ A data de início não pode ser maior que a data de fim.")
+        return
 
-    appointment_response = lab2dev_api.post('appointments', appointment)
+    work_start_time = os.getenv('WORK_START_TIME', '09:00:00')
+    work_end_time = os.getenv('WORK_END_TIME', '17:00:00')
 
-    if 'error' in appointment_response:
-        print(f'❌ Erro ao registrar o ponto para {short_format_today}')
-    else:
-        print(f'✅ Ponto registrado para {short_format_today}')
+    current_date = start_date
+    while current_date <= end_date:
+        formatted_date = current_date.strftime('%Y-%m-%dT03:00:00.000Z')
+        start_datetime = f"{current_date.strftime('%Y-%m-%d')}T{work_start_time}.000Z"
+        end_datetime = f"{current_date.strftime('%Y-%m-%d')}T{work_end_time}.000Z"
+
+        appointment = {
+            'date': formatted_date,
+            'start': start_datetime,
+            'end': end_datetime,
+            'billable': True,
+            'extra': False,
+            'title': default_description,
+            'project': sre_project['id'],
+        }
+
+        appointment_response = lab2dev_api.post('appointments', appointment)
+
+        if 'error' in appointment_response:
+            print(f'❌ Erro ao registrar o ponto para {current_date.strftime("%d/%m/%Y")}')
+        else:
+            print(f'✅ Ponto registrado para {current_date.strftime("%d/%m/%Y")}')
+
+        current_date += timedelta(days=1)
 
 if __name__ == "__main__":
     register_appointments()
