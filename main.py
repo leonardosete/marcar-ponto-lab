@@ -1,72 +1,110 @@
-from datetime import datetime, timedelta
-
+import os
+import requests
 import utils
-from lab2dev_api import Lab2DevApi
+from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Lab2DevApi:
+    _base_url = 'https://portal-api.lab2dev.com'
+    _http_client: requests.Session
+
+    def __init__(self):
+        response = self.__get_cookie_response_from_user_and_password()
+
+        self._http_client = requests.Session()
+        self._http_client.cookies.update(response.cookies)
+
+        utils.print_json(self.get("collaborators/whoami"))
+
+    def __get_cookie_response_from_user_and_password(self):
+        response = requests.post(
+            "https://portal-api.lab2dev.com/auth/login/password",
+            json={
+                "email": os.environ['LAB2DEV_USER_EMAIL'],
+                "password": os.environ['LAB2DEV_USER_PASSWORD'],
+            },
+            headers={
+                "Origin": "https://apontamentos.lab2dev.com",
+            }
+        )
+
+        if response.status_code != 200:
+            raise Exception("Failed to authenticate. Check credentials.")
+
+        return response
+
+    def get(self, endpoint):
+        url = f'{self._base_url}/{endpoint}'
+        response = self._http_client.get(url)
+
+        try:
+            return response.json()
+        except:
+            return {}
+
+    def post(self, endpoint, data):
+        url = f'{self._base_url}/{endpoint}'
+        response = self._http_client.post(url, json=data)
+
+        try:
+            return response.json()
+        except:
+            return {}
+
+    def put(self, endpoint, data):
+        url = f'{self._base_url}/{endpoint}'
+        response = self._http_client.put(url, json=data)
+
+        try:
+            return response.json()
+        except:
+            return {}
+
+    def delete(self, endpoint):
+        url = f'{self._base_url}/{endpoint}'
+        response = self._http_client.delete(url)
+
+        try:
+            return response.json()
+        except:
+            return {}
 
 def register_appointments():
-  lab2dev_api = Lab2DevApi()
+    lab2dev_api = Lab2DevApi()
 
-  project_name = 'WHP TM - Alocação IT Engineer SRE'
-  default_description = 'Whirlpool - Automated'
+    project_name = 'WHP TM - SRE Sênior'
+    default_description = 'Atividades SRE/DevOps'
 
-  lab2dev_projects = lab2dev_api.get('projects')
+    lab2dev_projects = lab2dev_api.get('projects')
 
-  sre_project = list(filter(
-    lambda project: (project['name'] == project_name), 
-    lab2dev_projects['projects'],
-  ))[0]
+    sre_project = list(filter(
+        lambda project: (project['name'] == project_name), 
+        lab2dev_projects['projects'],
+    ))[0]
 
-  non_working_days = lab2dev_api.get('tracker/workdays')
-
-  formatted_non_working_days = list([
-    day['date'][:10]
-    for day 
-    in non_working_days 
-    if day['type'] == 'NON_WORKING_DAY'
-  ])
-
-  today = datetime.today()
-  next_date = datetime(today.year, today.month, 1)
-
-  while next_date.month == today.month:
-    current_date = next_date
-    next_date += timedelta(days=1)
-
-    if current_date.weekday() in [5, 6]:
-      continue
-
-    short_format_current_date = current_date.strftime('%Y-%m-%d')
-
-    if short_format_current_date in formatted_non_working_days:
-      print(f'❕ day {current_date} skipping non-working day')
-      continue
-
-    formatted_date = current_date.strftime('%Y-%m-%dT03:00:00.000Z')
-
-    start_date = current_date.strftime('%Y-%m-%dT09:00:00.000Z')
-    end_date = current_date.strftime('%Y-%m-%dT17:00:00.000Z')
+    today = datetime.today()
+    short_format_today = today.strftime('%Y-%m-%d')
+    formatted_date = today.strftime('%Y-%m-%dT03:00:00.000Z')
+    start_date = today.strftime('%Y-%m-%dT09:00:00.000Z')
+    end_date = today.strftime('%Y-%m-%dT17:00:00.000Z')
 
     appointment = {
-      'date': formatted_date,
-      'start': start_date,
-      'end': end_date,
-
-      'billable': True,
-      'extra': False,
-      'title': default_description,
-      'project': sre_project['id'],
+        'date': formatted_date,
+        'start': start_date,
+        'end': end_date,
+        'billable': True,
+        'extra': False,
+        'title': default_description,
+        'project': sre_project['id'],
     }
 
     appointment_response = lab2dev_api.post('appointments', appointment)
 
     if 'error' in appointment_response:
-      print(f'❌ day {short_format_current_date}')
-      
-      utils.print_json({
-        'request': appointment,
-        'response': appointment_response,
-      })
+        print(f'❌ Erro ao registrar o ponto de hoje ({short_format_today})')
     else:
-      print(f'✅ day {short_format_current_date}')
+        print(f'✅ Ponto registrado para hoje ({short_format_today})')
 
 register_appointments()
