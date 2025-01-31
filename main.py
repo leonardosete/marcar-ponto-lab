@@ -50,11 +50,30 @@ class Lab2DevApi:
         except:
             return {}
 
+    def put(self, endpoint, data):
+        url = f'{self._base_url}/{endpoint}'
+        response = self._http_client.put(url, json=data)
+
+        try:
+            return response.json()
+        except:
+            return {}
+
+    def delete(self, endpoint):
+        url = f'{self._base_url}/{endpoint}'
+        response = self._http_client.delete(url)
+
+        try:
+            return response.json()
+        except:
+            return {}
+
 def register_appointments():
     lab2dev_api = Lab2DevApi()
 
     project_name = 'WHP TM - SRE Sênior'
     default_description = os.getenv('DESCRIPTION', 'Atividades SRE/DevOps')
+    overwrite_existing = os.getenv('OVERWRITE_EXISTING', 'false').lower() == 'true'
     
     lab2dev_projects = lab2dev_api.get('projects')
 
@@ -89,6 +108,9 @@ def register_appointments():
         if day['type'] == 'NON_WORKING_DAY'
     ])
 
+    existing_appointments = lab2dev_api.get('appointments')
+    existing_dates = {appt['date'][:10]: appt['id'] for appt in existing_appointments.get('appointments', [])}
+
     current_date = start_date
     while current_date <= end_date:
         # Ignorar finais de semana
@@ -108,22 +130,33 @@ def register_appointments():
         start_datetime = f"{current_date.strftime('%Y-%m-%d')}T{work_start_time}.000Z"
         end_datetime = f"{current_date.strftime('%Y-%m-%d')}T{work_end_time}.000Z"
 
-        appointment = {
-            'date': formatted_date,
-            'start': start_datetime,
-            'end': end_datetime,
-            'billable': True,
-            'extra': False,
-            'title': default_description,
-            'project': sre_project['id'],
-        }
-
-        appointment_response = lab2dev_api.post('appointments', appointment)
-
-        if 'error' in appointment_response:
-            print(f'❌ Erro ao registrar o ponto para {current_date.strftime("%d/%m/%Y")}')
+        if short_format_date in existing_dates:
+            if overwrite_existing:
+                print(f'🔄 Atualizando apontamento existente para {current_date.strftime("%d/%m/%Y")}')
+                appointment_id = existing_dates[short_format_date]
+                lab2dev_api.put(f'appointments/{appointment_id}', {
+                    'start': start_datetime,
+                    'end': end_datetime,
+                    'title': default_description,
+                })
+            else:
+                print(f'🔹 {current_date.strftime("%d/%m/%Y")} já tem um apontamento registrado. Pulando.')
         else:
-            print(f'✅ Ponto registrado para {current_date.strftime("%d/%m/%Y")}')
+            appointment = {
+                'date': formatted_date,
+                'start': start_datetime,
+                'end': end_datetime,
+                'billable': True,
+                'extra': False,
+                'title': default_description,
+                'project': sre_project['id'],
+            }
+            appointment_response = lab2dev_api.post('appointments', appointment)
+
+            if 'error' in appointment_response:
+                print(f'❌ Erro ao registrar o ponto para {current_date.strftime("%d/%m/%Y")}')
+            else:
+                print(f'✅ Ponto registrado para {current_date.strftime("%d/%m/%Y")}')
 
         current_date += timedelta(days=1)
 
