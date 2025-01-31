@@ -55,7 +55,7 @@ def register_appointments():
 
     project_name = 'WHP TM - SRE Sênior'
     default_description = os.getenv('DESCRIPTION', 'Atividades SRE/DevOps')
-
+    
     lab2dev_projects = lab2dev_api.get('projects')
 
     sre_project = list(filter(
@@ -101,15 +101,6 @@ def register_appointments():
         short_format_date = current_date.strftime('%Y-%m-%d')
         if short_format_date in formatted_non_working_days:
             print(f'❌ {current_date.strftime("%d/%m/%Y")} é feriado. Pulando.')
-            current_date += timedelta(days=1)
-            continue
-
-        # Verificar se já existe apontamento no dia
-        existing_appointments = lab2dev_api.get('appointments')
-        existing_dates = [appt['date'][:10] for appt in existing_appointments.get('appointments', [])]
-
-        if short_format_date in existing_dates:
-            print(f'🔹 {current_date.strftime("%d/%m/%Y")} já tem um apontamento registrado. Pulando.')
             current_date += timedelta(days=1)
             continue
 
