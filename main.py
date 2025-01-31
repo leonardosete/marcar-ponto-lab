@@ -51,24 +51,6 @@ class Lab2DevApi:
         except:
             return {}
 
-    def put(self, endpoint, data):
-        url = f'{self._base_url}/{endpoint}'
-        response = self._http_client.put(url, json=data)
-
-        try:
-            return response.json()
-        except:
-            return {}
-
-    def delete(self, endpoint):
-        url = f'{self._base_url}/{endpoint}'
-        response = self._http_client.delete(url)
-
-        try:
-            return response.json()
-        except:
-            return {}
-
 def register_appointments():
     lab2dev_api = Lab2DevApi()
 
@@ -99,8 +81,30 @@ def register_appointments():
     work_start_time = os.getenv('WORK_START_TIME', '09:00:00')
     work_end_time = os.getenv('WORK_END_TIME', '17:00:00')
 
+    # Obtendo a lista de feriados via API
+    non_working_days = lab2dev_api.get('tracker/workdays')
+
+    formatted_non_working_days = list([
+        day['date'][:10]
+        for day in non_working_days 
+        if day['type'] == 'NON_WORKING_DAY'
+    ])
+
     current_date = start_date
     while current_date <= end_date:
+        # Ignorar finais de semana
+        if current_date.weekday() in [5, 6]:  # 5 = Sábado, 6 = Domingo
+            print(f'❌ {current_date.strftime("%d/%m/%Y")} é fim de semana. Pulando.')
+            current_date += timedelta(days=1)
+            continue
+
+        # Ignorar feriados
+        short_format_date = current_date.strftime('%Y-%m-%d')
+        if short_format_date in formatted_non_working_days:
+            print(f'❌ {current_date.strftime("%d/%m/%Y")} é feriado. Pulando.')
+            current_date += timedelta(days=1)
+            continue
+
         formatted_date = current_date.strftime('%Y-%m-%dT03:00:00.000Z')
         start_datetime = f"{current_date.strftime('%Y-%m-%d')}T{work_start_time}.000Z"
         end_datetime = f"{current_date.strftime('%Y-%m-%d')}T{work_end_time}.000Z"
